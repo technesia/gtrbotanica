@@ -127,18 +127,23 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 }
 
 /* Burger button base styles */
-.burger { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); background: #fff; border-radius: 10px; cursor: pointer; }
-.burger .burger-bar { width: 20px; height: 2px; background: var(--text); border-radius: 2px; display: block; }
+.menu-trigger { display: none; align-items: center; gap: 10px; }
+.burger { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid #1e3a8a; background: #1e3a8a; border-radius: 50%; cursor: pointer; }
+.burger .burger-bar { width: 18px; height: 2px; background: #fff; border-radius: 2px; display: block; }
 .burger .burger-bar + .burger-bar { margin-top: 4px; }
-.burger:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.burger:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.burger-label { font-weight: 700; color: #4b5563; }
 @media (max-width: 1024px) {
+  .menu-trigger { display: flex; }
   .burger { display: flex; }
   .navbar { display: none; }
   .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
 }
 @media (max-width: 768px) {
+  .menu-trigger { display: flex; }
   .burger { display: flex; }
   .navbar { display: none; }
   .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
   .auth-links { width: 100%; justify-content: flex-end; }
 }
+.auth-links { margin-left: auto; }

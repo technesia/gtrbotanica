@@ -21,12 +21,15 @@ require_once __DIR__ . '/auth.php';
             <div class="subtitle">Cluster Botanica</div>
         </div>
     </a>
-    <button class="burger" id="burgerBtn" aria-label="Buka menu" aria-controls="site-nav" aria-expanded="false">
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-    </button>
-    <nav id="site-nav" class="navbar">
+    <div class="menu-trigger">
+         <button class="burger" id="burgerBtn" aria-label="Buka menu" aria-controls="site-nav" aria-expanded="false">
+             <span class="burger-bar"></span>
+             <span class="burger-bar"></span>
+             <span class="burger-bar"></span>
+         </button>
+         <span class="burger-label">MENU</span>
+     </div>
+     <nav id="site-nav" class="navbar">
         <a href="/index.php">Home</a>
         <div class="dropdown">
             <a href="#" class="dropbtn">Dashboard ▾</a>
