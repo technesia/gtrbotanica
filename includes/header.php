@@ -21,7 +21,12 @@ require_once __DIR__ . '/auth.php';
             <div class="subtitle">Cluster Botanica</div>
         </div>
     </a>
-    <nav class="navbar">
+    <button class="burger" id="burgerBtn" aria-label="Buka menu" aria-controls="site-nav" aria-expanded="false">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+    </button>
+    <nav id="site-nav" class="navbar">
         <a href="/index.php">Home</a>
         <div class="dropdown">
             <a href="#" class="dropbtn">Dashboard ▾</a>
@@ -67,5 +72,16 @@ window.addEventListener('DOMContentLoaded', function(){
   test.onerror = function(){ /* keep fallback SVG */ };
   test.src = '/Logo1.png?cb=' + Date.now();
 });
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('burgerBtn');
+  var nav = document.getElementById('site-nav');
+  if(!btn || !nav) return;
+  btn.addEventListener('click', function(){
+    var open = nav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
 </script>
 <main class="container">

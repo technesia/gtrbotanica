@@ -125,3 +125,20 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
   .subtitle { display: none; }
   .small { font-size: 12px; }
 }
+
+/* Burger button base styles */
+.burger { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); background: #fff; border-radius: 10px; cursor: pointer; }
+.burger .burger-bar { width: 20px; height: 2px; background: var(--text); border-radius: 2px; display: block; }
+.burger .burger-bar + .burger-bar { margin-top: 4px; }
+.burger:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+@media (max-width: 1024px) {
+  .burger { display: flex; }
+  .navbar { display: none; }
+  .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
+}
+@media (max-width: 768px) {
+  .burger { display: flex; }
+  .navbar { display: none; }
+  .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
+  .auth-links { width: 100%; justify-content: flex-end; }
+}
