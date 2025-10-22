@@ -138,7 +138,7 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 .sidebar-overlay { display: none; }
 @media (max-width: 1024px) {
    .menu-trigger, .burger { display: none; }
-   .floating-arrow { display: flex; position: fixed; left: 12px; bottom: 20px; width: 46px; height: 46px; border-radius: 50%; background: var(--mint); border: 1px solid #8ee98e; z-index: 1003; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+   .floating-arrow { display: flex; position: fixed; left: 12px; top: 12px; width: 46px; height: 46px; border-radius: 50%; background: var(--mint); border: 1px solid #8ee98e; z-index: 1006; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
    .floating-arrow .arrow-icon { width: 12px; height: 12px; border-right: 3px solid var(--text); border-top: 3px solid var(--text); transform: rotate(45deg); }
    .navbar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background: var(--card); display: flex; flex-direction: column; gap: 8px; padding: 16px; transform: translateX(-100%); transition: transform .25s ease; z-index: 1002; border-right: 1px solid var(--border); }
    .navbar.open { transform: translateX(0); }
@@ -149,7 +149,7 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
  }
  @media (max-width: 768px) {
    .menu-trigger, .burger { display: none; }
-   .floating-arrow { display: flex; left: 10px; bottom: 18px; width: 44px; height: 44px; }
+   .floating-arrow { display: flex; left: 10px; top: 12px; width: 44px; height: 44px; }
    .navbar { width: 260px; gap: 8px; padding: 14px; }
    .auth-links { display: none; }
  }
