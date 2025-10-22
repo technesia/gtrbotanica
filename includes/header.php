@@ -74,6 +74,9 @@ require_once __DIR__ . '/auth.php';
         <?php endif; ?>
     </div>
 </header>
+<!-- Floating arrow toggle and sidebar overlay -->
+<button id="arrowBtn" class="floating-arrow" aria-label="Buka Menu" aria-expanded="false"><span class="arrow-icon"></span></button>
+<div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
 <script>
 // Try to load PNG; if success, swap into the visible <img>
 window.addEventListener('DOMContentLoaded', function(){
@@ -87,13 +90,26 @@ window.addEventListener('DOMContentLoaded', function(){
 </script>
 <script>
 (function(){
-  var btn = document.getElementById('burgerBtn');
+  var burger = document.getElementById('burgerBtn');
+  var arrow = document.getElementById('arrowBtn');
   var nav = document.getElementById('site-nav');
-  if(!btn || !nav) return;
-  btn.addEventListener('click', function(){
+  var overlay = document.getElementById('sidebarOverlay');
+  if(!nav) return;
+  function toggleNav(btn){
     var open = nav.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
+    if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(overlay){ overlay.classList.toggle('open', open); }
+    document.body.classList.toggle('no-scroll', open);
+  }
+  if(burger){ burger.addEventListener('click', function(e){ e.preventDefault(); toggleNav(burger); }); }
+  if(arrow){ arrow.addEventListener('click', function(e){ e.preventDefault(); toggleNav(arrow); }); }
+  if(overlay){ overlay.addEventListener('click', function(){
+    nav.classList.remove('open');
+    if(burger) burger.setAttribute('aria-expanded','false');
+    if(arrow) arrow.setAttribute('aria-expanded','false');
+    overlay.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+  }); }
 })();
 </script>
 <main class="container">
