@@ -117,8 +117,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Simpan metadata + auto-entry pemasukan dalam transaksi
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare('INSERT INTO bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal, filename, stored_path, created_at) VALUES (?,?,?,?,?,?,?,?,?)');
+    // Insert dengan IGNORE untuk menangani duplikasi secara mulus
+    $sqlInsertBT = ($driver === 'sqlite')
+      ? 'INSERT OR IGNORE INTO bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal, filename, stored_path, created_at) VALUES (?,?,?,?,?,?,?,?,?)'
+      : 'INSERT IGNORE INTO bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal, filename, stored_path, created_at) VALUES (?,?,?,?,?,?,?,?,?)';
+    $stmt = $pdo->prepare($sqlInsertBT);
     $stmt->execute([$nomor_rumah, $nama_lengkap, $whatsapp, $bulan, $nominal, $tanggal, $newName, $urlPath, date('Y-m-d H:i:s')]);
+    $affected = $stmt->rowCount();
+
+    // Jika tidak ada baris baru (duplikat), jangan lanjutkan pemasukan, hapus file, dan anggap sukses
+    if ($affected === 0) {
+      if (is_file($destPath)) { @unlink($destPath); }
+      $pdo->commit();
+      $successMsg = 'Bukti pembayaran sudah tercatat, duplikat diabaikan.';
+      $_SESSION['flash_success'] = $successMsg;
+      $_SESSION['upload_csrf'] = bin2hex(random_bytes(16));
+      $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+      $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8081';
+      header("Location: {$scheme}://{$host}/upload_bukti.php");
+      exit;
+    }
 
     // Tanggal pencatatan pemasukan mengikuti pilihan bulan (agar masuk ke periode yang dipilih)
     $ledgerDate = $tanggal;
@@ -139,7 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt2check->execute([$ledgerDate, $nominal, $ket]);
     $existsIncome = (int)($stmt2check->fetch()['c'] ?? 0) > 0;
     if (!$existsIncome) {
-      $stmt2 = $pdo->prepare('INSERT INTO pemasukan (tanggal, jumlah, keterangan) VALUES (?,?,?)');
+      $sqlInsertIncome = ($driver === 'sqlite')
+        ? 'INSERT OR IGNORE INTO pemasukan (tanggal, jumlah, keterangan) VALUES (?,?,?)'
+        : 'INSERT IGNORE INTO pemasukan (tanggal, jumlah, keterangan) VALUES (?,?,?)';
+      $stmt2 = $pdo->prepare($sqlInsertIncome);
       $stmt2->execute([$ledgerDate, $nominal, $ket]);
     }
 
