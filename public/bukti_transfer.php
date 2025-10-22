@@ -39,6 +39,29 @@ try {
   // Abaikan error create table; tampilkan di bawah bila terjadi
 }
 
+// Optional: admin-only deduplication action
+$dedupMsg = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dedup']) && function_exists('is_admin') && is_admin()) {
+  try {
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    if ($driver === 'sqlite') {
+      $pdo->beginTransaction();
+      $deleted = $pdo->exec("DELETE FROM bukti_transfer WHERE id NOT IN (SELECT MIN(id) FROM bukti_transfer GROUP BY nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)");
+      $pdo->commit();
+      $dedupMsg = 'Dedup selesai: ' . (int)$deleted . ' baris dihapus.';
+      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)");
+    } else {
+      $pdo->beginTransaction();
+      $deleted = $pdo->exec("DELETE bt1 FROM bukti_transfer bt1 JOIN bukti_transfer bt2 ON bt1.id > bt2.id AND bt1.nomor_rumah = bt2.nomor_rumah AND bt1.nama_lengkap = bt2.nama_lengkap AND bt1.whatsapp = bt2.whatsapp AND bt1.bulan = bt2.bulan AND bt1.nominal = bt2.nominal AND bt1.tanggal = bt2.tanggal");
+      $pdo->commit();
+      $dedupMsg = 'Dedup selesai: ' . (int)$deleted . ' baris dihapus.';
+      try { $pdo->exec("ALTER TABLE bukti_transfer ADD UNIQUE KEY ui_bukti (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)"); } catch (Throwable $e2) {}
+    }
+  } catch (Throwable $e) {
+    $dedupMsg = 'Error dedup: ' . $e->getMessage();
+  }
+}
+
 function formatRupiah($n){ return 'Rp ' . number_format((int)($n ?? 0), 0, ',', '.'); }
 
 $rows = [];$errorMsg='';
@@ -56,6 +79,15 @@ try {
 <div class="card" style="margin-top:8px;">
   <?php if ($errorMsg): ?>
     <div class="small" style="padding:8px;background:#ffecec;color:#b00;border:1px solid #ffb3b3;margin-bottom:10px;">Error: <?= htmlspecialchars($errorMsg) ?></div>
+  <?php endif; ?>
+  <?php if (!empty($dedupMsg)): ?>
+    <div class="small" style="padding:8px;background:#e6ffed;color:#0b7;border:1px solid #b3f5c3;margin-bottom:10px;"><?= htmlspecialchars($dedupMsg) ?></div>
+  <?php endif; ?>
+  <?php if (function_exists('is_admin') && is_admin()): ?>
+    <form method="POST" action="/bukti_transfer.php" style="margin-bottom:10px;">
+      <input type="hidden" name="dedup" value="1" />
+      <button class="button" type="submit">Dedup duplikasi</button>
+    </form>
   <?php endif; ?>
   <table class="table" style="width:100%;">
     <thead>
