@@ -15,7 +15,7 @@ require_once __DIR__ . '/auth.php';
 <body>
 <header class="site-header">
     <a href="/index.php" class="brand" aria-label="Beranda">
-        <div class="logo-badge"><img src="/assets/fallback-logo.svg" alt="Logo" class="logo" /></div>
+        <div class="logo-badge"><img src="/Logo1.png" alt="Logo" class="logo" onerror="this.src='/assets/fallback-logo.svg';" /></div>
         <div>
             <div class="title">Grand Tenjo Residence</div>
             <div class="subtitle">Cluster Botanica</div>
