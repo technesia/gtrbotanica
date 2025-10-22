@@ -55,6 +55,15 @@ require_once __DIR__ . '/auth.php';
             <!-- Non-admin sees single link to Rangkuman only if desired -->
         <?php endif; ?>
         <a href="/about.php">About Us</a>
+    
+    <!-- Auth (mobile/tablet) inside burger menu -->
+    <div class="nav-auth-mobile">
+      <?php if (is_logged_in()): ?>
+        <a href="/logout.php" class="btn">Logout</a>
+      <?php else: ?>
+        <a href="/login.php" class="btn primary">Masuk</a>
+      <?php endif; ?>
+    </div>
     </nav>
     <div class="auth-links">
         <?php if (is_logged_in()): ?>
