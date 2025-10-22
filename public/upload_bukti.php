@@ -93,6 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         stored_path TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       );");
+      // Unique guard to enforce deduplication at DB level
+      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal);");
+      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_pemasukan_unique ON pemasukan (tanggal, jumlah, keterangan);");
     } else {
       $pdo->exec("CREATE TABLE IF NOT EXISTS bukti_transfer (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,6 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         stored_path VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+      // Try to add unique keys (ignore if already exist)
+      try { $pdo->exec("ALTER TABLE bukti_transfer ADD UNIQUE KEY ui_bukti (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)"); } catch (Throwable $e) {}
+      try { $pdo->exec("ALTER TABLE pemasukan ADD UNIQUE KEY ui_pemasukan (tanggal, jumlah, keterangan)"); } catch (Throwable $e) {}
     }
 
     // Simpan metadata + auto-entry pemasukan dalam transaksi
@@ -160,6 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
   }
 }
+?>
 <?php
 // Muat header setelah logika POST agar redirect tidak error "header already sent"
 require_once __DIR__ . '/../includes/header.php';
