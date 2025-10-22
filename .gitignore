@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Databases / snapshots
+*.sqlite
+*.db
+
+# Uploads (runtime data)
+/public/uploads/
+/uploads/
+
+# Logs
+*.log
+
+# Vendor / dependencies (if added later)
+/vendor/
+node_modules/
+
+# Caches
+.cache/
