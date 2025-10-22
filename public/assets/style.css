@@ -134,20 +134,20 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 .burger:hover { box-shadow: 0 4px 12px rgba(152,255,152,0.35); }
 .burger-label { font-weight: 700; color: #4b5563; }
 @media (max-width: 1024px) {
-  .menu-trigger { display: none; }
-  .burger { display: none; }
-  .navbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%; }
-  .nav-auth-mobile { display: flex; margin-left: auto; }
-  .auth-links { display: none; }
-}
-@media (max-width: 768px) {
-  .menu-trigger { display: none; }
-  .burger { display: none; }
-  .navbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
-  .nav-auth-mobile { display: flex; margin-left: auto; }
-  .auth-links { display: none; }
-}
-.auth-links { margin-left: auto; }
+   .menu-trigger { display: flex; align-items: center; gap: 10px; }
+   .burger { display: flex; }
+   .navbar { display: none; }
+   .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
+   .auth-links { display: none; }
+ }
+ @media (max-width: 768px) {
+   .menu-trigger { display: flex; align-items: center; gap: 10px; }
+   .burger { display: flex; }
+   .navbar { display: none; }
+   .navbar.open { display: flex; flex-direction: column; width: 100%; gap: 8px; padding: 8px 0; }
+   .auth-links { display: none; }
+ }
+ .auth-links { margin-left: auto; }
 /* Auth inside navbar (mobile/tablet) */
 .nav-auth-mobile { display: none; gap: 8px; align-items: center; }
 .nav-auth-mobile .btn { padding: 6px 12px; }
