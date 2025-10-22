@@ -91,6 +91,7 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
   .container { max-width: 900px; }
   .logo-badge { width: 52px; height: 52px; }
   .logo { width: 44px; height: 44px; }
+  .brand { margin-left: auto; }
   .navbar { flex-wrap: wrap; gap: 8px; }
   .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
   #homeSummary { grid-template-columns: repeat(2, 1fr) !important; }
@@ -100,7 +101,7 @@ body { margin: 0; font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Ro
 
 @media (max-width: 768px) {
   .site-header { flex-wrap: wrap; }
-  .brand { width: 100%; }
+  .brand { width: auto; margin-left: auto; }
   .navbar { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
   .logo-badge { width: 44px; height: 44px; }
   .logo { width: 36px; height: 36px; }
