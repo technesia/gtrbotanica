@@ -1,10 +1,16 @@
 <?php
-require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/auth.php';
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 $pdo = get_pdo();
 
 $successMsg = '';
 $errorMsg = '';
+// Token anti-duplikasi submit
+if (empty($_SESSION['upload_csrf'])) {
+  $_SESSION['upload_csrf'] = bin2hex(random_bytes(16));
+}
+$upload_token = $_SESSION['upload_csrf'];
 
 function sanitize_filename($name){
   $name = preg_replace('/[^A-Za-z0-9_\.-]/', '_', $name);
@@ -20,6 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bulan_lain = trim($_POST['bulan_lain'] ?? '');
     $nominal = (int)($_POST['nominal'] ?? 0);
     $tanggal = trim($_POST['tanggal'] ?? '');
+
+    // Validasi token idempotensi
+    if (!isset($_POST['token']) || !hash_equals($_SESSION['upload_csrf'] ?? '', $_POST['token'])) {
+      throw new Exception('Form tidak valid atau sudah diproses. Mohon ulangi dari halaman awal.');
+    }
 
     if ($bulan === 'other') { $bulan = $bulan_lain ?: 'Other'; }
 
@@ -48,6 +59,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newName = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . $base . '.' . $ext;
     $destPath = $destDir . '/' . $newName;
     $urlPath = '/uploads/bukti/' . $newName;
+
+    // Cek duplikasi metadata bukti_transfer sebelum insert
+    $stmtDup = $pdo->prepare('SELECT id FROM bukti_transfer WHERE nomor_rumah = ? AND nama_lengkap = ? AND whatsapp = ? AND bulan = ? AND nominal = ? AND tanggal = ?');
+    $stmtDup->execute([$nomor_rumah, $nama_lengkap, $whatsapp, $bulan, $nominal, $tanggal]);
+    $existsBT = $stmtDup->fetch();
+
+    if ($existsBT) {
+      $successMsg = 'Bukti pembayaran sudah tercatat, duplikat diabaikan.';
+      $_SESSION['flash_success'] = $successMsg;
+      // Putar token dan redirect (PRG)
+      $_SESSION['upload_csrf'] = bin2hex(random_bytes(16));
+      $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+      $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8080';
+      header("Location: {$scheme}://{$host}/upload_bukti.php");
+      exit;
+    }
 
     if (!move_uploaded_file($file['tmp_name'], $destPath)) { throw new Exception('Gagal menyimpan file bukti pembayaran'); }
 
@@ -94,27 +121,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'januari' => 1, 'februari' => 2, 'maret' => 3, 'april' => 4, 'mei' => 5, 'juni' => 6,
       'juli' => 7, 'agustus' => 8, 'september' => 9, 'oktober' => 10, 'november' => 11, 'desember' => 12
     ];
-    if (preg_match('/(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+(\d{4})/i', $bl, $mm)) {
+    if (preg_match('/(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\\s+(\\d{4})/i', $bl, $mm)) {
       $mon = $mmap[strtolower($mm[1])] ?? null;
       $yr = (int)($mm[2] ?? 0);
       if ($mon && $yr) { $ledgerDate = sprintf('%04d-%02d-01', $yr, $mon); }
     }
 
     $ket = 'Bukti Transfer IPL ' . $bulan . ' - ' . $nama_lengkap . ' (' . $nomor_rumah . ')';
-    $stmt2 = $pdo->prepare('INSERT INTO pemasukan (tanggal, jumlah, keterangan) VALUES (?,?,?)');
-    $stmt2->execute([$ledgerDate, $nominal, $ket]);
+    // Cek duplikasi pemasukan
+    $stmt2check = $pdo->prepare('SELECT COUNT(1) AS c FROM pemasukan WHERE tanggal = ? AND jumlah = ? AND keterangan = ?');
+    $stmt2check->execute([$ledgerDate, $nominal, $ket]);
+    $existsIncome = (int)($stmt2check->fetch()['c'] ?? 0) > 0;
+    if (!$existsIncome) {
+      $stmt2 = $pdo->prepare('INSERT INTO pemasukan (tanggal, jumlah, keterangan) VALUES (?,?,?)');
+      $stmt2->execute([$ledgerDate, $nominal, $ket]);
+    }
 
     $pdo->commit();
 
     $successMsg = 'Bukti pembayaran berhasil diunggah dan otomatis tercatat sebagai pemasukan.';
+    $_SESSION['flash_success'] = $successMsg;
+    // Putar token dan redirect (PRG)
+    $_SESSION['upload_csrf'] = bin2hex(random_bytes(16));
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8080';
+    header("Location: {$scheme}://{$host}/upload_bukti.php");
+    exit;
   } catch (Throwable $e) {
     if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
     if (isset($destPath) && is_file($destPath)) { @unlink($destPath); }
     $errorMsg = $e->getMessage();
+    $_SESSION['flash_error'] = $errorMsg;
+    // Putar token dan redirect (PRG)
+    $_SESSION['upload_csrf'] = bin2hex(random_bytes(16));
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8080';
+    header("Location: {$scheme}://{$host}/upload_bukti.php");
+    exit;
   }
 }
+<?php
+// Muat header setelah logika POST agar redirect tidak error "header already sent"
+require_once __DIR__ . '/../includes/header.php';
+// Ambil flash messages jika ada
+if (!empty($_SESSION['flash_success'])) { $successMsg = $_SESSION['flash_success']; unset($_SESSION['flash_success']); }
+if (!empty($_SESSION['flash_error'])) { $errorMsg = $_SESSION['flash_error']; unset($_SESSION['flash_error']); }
 ?>
-
 <section class="hero" style="padding-top:24px;padding-bottom:8px;">
   <h1 style="margin:0;font-weight:700;">Form Pembayaran IPL Botanica GTR</h1>
   <p style="margin-top:6px;color:#4b5563;">Pembayaran IPL dapat dilakukan melalui rekening di bawah ini dengan mengupload bukti pembayaran.</p>
@@ -135,6 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <form class="form" method="POST" action="/upload_bukti.php" enctype="multipart/form-data" onsubmit="return validateUploadForm();">
+    <input type="hidden" name="token" value="<?= htmlspecialchars($upload_token) ?>" />
     <label>Nomor Rumah (contoh: BB2/1)*</label>
     <input class="input" name="nomor_rumah" id="nomor_rumah" placeholder="BB2/1" required />
 
@@ -194,6 +247,8 @@ function validateUploadForm(){
     alert('Format file tidak didukung. Gunakan JPG, PNG, atau PDF.');
     return false;
   }
+  const btn = document.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Mengunggah...'; btn.classList.add('disabled'); }
   return true;
 }
 
