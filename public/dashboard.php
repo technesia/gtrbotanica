@@ -1,5 +1,5 @@
 <?php require_once __DIR__ . '/../includes/header.php'; ?>
-<?php $view = $_GET['view'] ?? 'laporan'; $heroTitle = ($view === 'warga') ? 'Daftar Warga Cluster Botanica' : 'Master Data Cluster Botanica'; $heroSub = ($view === 'warga') ? 'Update per Agustus 2024' : 'Laporan keuangan bulanan dan tahunan'; ?>
+<?php $view = $_GET['view'] ?? 'laporan'; $heroTitle = ($view === 'warga') ? 'Daftar Warga Cluster Botanica' : 'Laporan Keuangan Cluster Botanica'; $heroSub = ($view === 'warga') ? 'Update per Agustus 2024' : 'Laporan keuangan bulanan dan tahunan'; ?>
 <section class="hero" style="padding-top:24px;padding-bottom:8px;">
   <h1 style="margin:0;font-weight:700;<?= '' ?>"><?= htmlspecialchars($heroTitle) ?></h1>
   <p style="margin-top:6px;color:#4b5563;<?= '' ?>"><?= htmlspecialchars($heroSub) ?></p>

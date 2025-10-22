@@ -46,16 +46,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dedup']) && function_
     $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
     if ($driver === 'sqlite') {
       $pdo->beginTransaction();
-      $deleted = $pdo->exec("DELETE FROM bukti_transfer WHERE id NOT IN (SELECT MIN(id) FROM bukti_transfer GROUP BY nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)");
+      // Dedup bukti_transfer
+      $deletedBT = $pdo->exec("DELETE FROM bukti_transfer WHERE id NOT IN (SELECT MIN(id) FROM bukti_transfer GROUP BY nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)");
+      // Dedup pemasukan (tanggal, jumlah, keterangan)
+      try {
+        $deletedInc = $pdo->exec("DELETE FROM pemasukan WHERE id NOT IN (SELECT MIN(id) FROM pemasukan GROUP BY tanggal, jumlah, keterangan)");
+      } catch (Throwable $eInc) { $deletedInc = 0; }
       $pdo->commit();
-      $dedupMsg = 'Dedup selesai: ' . (int)$deleted . ' baris dihapus.';
-      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)");
+      // Enforce unique indexes
+      try { $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)"); } catch (Throwable $e1) {}
+      try { $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_pemasukan_unique ON pemasukan (tanggal, jumlah, keterangan)"); } catch (Throwable $e2) {}
+      $dedupMsg = 'Dedup selesai: ' . (int)$deletedBT . ' bukti_transfer, ' . (int)($deletedInc ?? 0) . ' pemasukan dihapus.';
     } else {
       $pdo->beginTransaction();
-      $deleted = $pdo->exec("DELETE bt1 FROM bukti_transfer bt1 JOIN bukti_transfer bt2 ON bt1.id > bt2.id AND bt1.nomor_rumah = bt2.nomor_rumah AND bt1.nama_lengkap = bt2.nama_lengkap AND bt1.whatsapp = bt2.whatsapp AND bt1.bulan = bt2.bulan AND bt1.nominal = bt2.nominal AND bt1.tanggal = bt2.tanggal");
+      // Dedup bukti_transfer
+      $deletedBT = $pdo->exec("DELETE bt1 FROM bukti_transfer bt1 JOIN bukti_transfer bt2 ON bt1.id > bt2.id AND bt1.nomor_rumah = bt2.nomor_rumah AND bt1.nama_lengkap = bt2.nama_lengkap AND bt1.whatsapp = bt2.whatsapp AND bt1.bulan = bt2.bulan AND bt1.nominal = bt2.nominal AND bt1.tanggal = bt2.tanggal");
+      // Dedup pemasukan (tanggal, jumlah, keterangan)
+      try {
+        $deletedInc = $pdo->exec("DELETE p1 FROM pemasukan p1 JOIN pemasukan p2 ON p1.id > p2.id AND p1.tanggal = p2.tanggal AND p1.jumlah = p2.jumlah AND p1.keterangan = p2.keterangan");
+      } catch (Throwable $eInc) { $deletedInc = 0; }
       $pdo->commit();
-      $dedupMsg = 'Dedup selesai: ' . (int)$deleted . ' baris dihapus.';
-      try { $pdo->exec("ALTER TABLE bukti_transfer ADD UNIQUE KEY ui_bukti (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)"); } catch (Throwable $e2) {}
+      // Enforce unique constraints
+      try { $pdo->exec("ALTER TABLE bukti_transfer ADD UNIQUE KEY ui_bukti (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal)"); } catch (Throwable $e1) {}
+      try { $pdo->exec("ALTER TABLE pemasukan ADD UNIQUE KEY ui_pemasukan (tanggal, jumlah, keterangan)"); } catch (Throwable $e2) {}
+      $dedupMsg = 'Dedup selesai: ' . (int)$deletedBT . ' bukti_transfer, ' . (int)($deletedInc ?? 0) . ' pemasukan dihapus.';
     }
   } catch (Throwable $e) {
     $dedupMsg = 'Error dedup: ' . $e->getMessage();
