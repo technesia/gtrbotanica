@@ -93,9 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         stored_path TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       );");
-      // Unique guard to enforce deduplication at DB level
-      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal);");
-      $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_pemasukan_unique ON pemasukan (tanggal, jumlah, keterangan);");
+      // Unique guard to enforce deduplication at DB level (ignore if duplicates exist)
+      try { $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bukti_unique ON bukti_transfer (nomor_rumah, nama_lengkap, whatsapp, bulan, nominal, tanggal);"); } catch (Throwable $ie) {}
+      try { $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_pemasukan_unique ON pemasukan (tanggal, jumlah, keterangan);"); } catch (Throwable $ie) {}
     } else {
       $pdo->exec("CREATE TABLE IF NOT EXISTS bukti_transfer (
         id INT AUTO_INCREMENT PRIMARY KEY,
